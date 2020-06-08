@@ -5,6 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using LojaVirtual.Models;
+using LojaVirtual.Libraries;
+using System.Text;
+using System.ComponentModel.DataAnnotations;
 
 namespace LojaVirtual.Controllers
 {
@@ -22,11 +25,45 @@ namespace LojaVirtual.Controllers
 
         public IActionResult ContatoAcao()
         {
-            string nome = HttpContext.Request.Form["nome"];
-            string email = HttpContext.Request.Form["email"];
-            string texto = HttpContext.Request.Form["texto"];
+            try
+            {
+                Contato contato = new Contato();
+                contato.Nome = HttpContext.Request.Form["nome"];
+                contato.Email = HttpContext.Request.Form["email"];
+                contato.Texto = HttpContext.Request.Form["texto"];
 
-            return new ContentResult() { Content = string.Format("Dados recebidos com sucesso!<br/> Nome: {0} <br/>E-mail: {1} <br/>Texto: {2}", nome, email, texto), ContentType = "text/html" };
+                var listaMensagens = new List<ValidationResult>();
+                var contexto = new ValidationContext(contato);
+                bool isValid = Validator.TryValidateObject(contato, contexto, listaMensagens, true);
+
+                if (isValid)
+                {
+                    ContatoEmail.EnviarContatoPorEmail(contato);
+
+                    ViewData["MSG_S"] = "Mensagem de contato enviado com sucesso!";
+                }
+                else
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var texto in listaMensagens)
+                    {
+                        sb.Append(texto.ErrorMessage);
+                    }
+
+                    ViewData["MSG_E"] = sb.ToString();
+                }
+
+                
+            }
+            catch (Exception e)
+            {
+                ViewData["MSG_E"] = "Opps! Tivemos um erro, tente novamente mais tarde!";
+
+                //TODO - Implementar Log
+            }
+            
+
+            return View("Contato");
         }
 
         public IActionResult Login()
