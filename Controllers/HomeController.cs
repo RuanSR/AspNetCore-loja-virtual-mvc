@@ -51,6 +51,7 @@ namespace LojaVirtual.Controllers
                     }
 
                     ViewData["MSG_E"] = sb.ToString();
+                    ViewData["CONTATO"] = contato;
                 }
 
                 
@@ -61,6 +62,8 @@ namespace LojaVirtual.Controllers
 
                 //TODO - Implementar Log
             }
+            
+
             return View("Contato");
         }
 
