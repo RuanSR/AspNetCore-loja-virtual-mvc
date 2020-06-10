@@ -1,0 +1,6 @@
+body {
+}
+.field-validation-error {
+    color: red;
+    display: block;
+}
