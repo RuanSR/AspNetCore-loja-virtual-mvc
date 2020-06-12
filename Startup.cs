@@ -1,4 +1,6 @@
 ﻿using LojaVirtual.Database;
+using LojaVirtual.Libraries.Login;
+using LojaVirtual.Libraries.Session;
 using LojaVirtual.Repositories;
 using LojaVirtual.Repositories.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -26,6 +28,7 @@ namespace LojaVirtual
             /*
              * Padrão Repository
              */
+             services.AddHttpContextAccessor();
             services.AddScoped<IClienteRepository, ClienteRepository>();
             services.AddScoped<INewsletterRepository, NewsletterRepository>();
 
@@ -36,6 +39,12 @@ namespace LojaVirtual
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            //Session Configure
+            services.AddMemoryCache();
+            services.AddSession();
+
+            services.AddScoped<Session>();
+            services.AddScoped<LoginCliente>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddDbContext<LojaContext>(options => {
@@ -60,6 +69,7 @@ namespace LojaVirtual
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
+            app.UseSession();
 
             app.UseMvc(routes =>
             {

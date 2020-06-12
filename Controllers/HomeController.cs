@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using LojaVirtual.Models;
-using LojaVirtual.Libraries;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
-using LojaVirtual.Database;
 using LojaVirtual.Repositories.Interfaces;
+using LojaVirtual.Libraries.Email;
+using LojaVirtual.Libraries.Login;
 
 namespace LojaVirtual.Controllers
 {
@@ -17,10 +14,13 @@ namespace LojaVirtual.Controllers
     {
         private IClienteRepository _repositoryCliente;
         private INewsletterRepository _repositoryNewsletter;
-        public HomeController(IClienteRepository repositoryCliente, INewsletterRepository repositoryNewsletter)
+        private LoginCliente _loginCliente;
+        public HomeController(IClienteRepository repositoryCliente, 
+        INewsletterRepository repositoryNewsletter, LoginCliente loginCliente)
         {
             _repositoryCliente = repositoryCliente;
             _repositoryNewsletter = repositoryNewsletter;
+            _loginCliente = loginCliente;
         }
 
         [HttpGet]
@@ -83,7 +83,7 @@ namespace LojaVirtual.Controllers
 
                 
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 ViewData["MSG_E"] = "Opps! Tivemos um erro, tente novamente mais tarde!";
 
@@ -94,9 +94,36 @@ namespace LojaVirtual.Controllers
             return View("Contato");
         }
 
+        [HttpGet]
         public IActionResult Login()
         {
             return View();
+        }
+
+        [HttpPost]
+        public IActionResult Login([FromForm]Cliente cliente)
+        {
+            Cliente clienteDB = _repositoryCliente.Login(cliente.Email, cliente.Senha);
+
+            if(clienteDB != null)
+            {
+                _loginCliente.Login(clienteDB);
+                return new RedirectResult(Url.Action(nameof(Painel)));
+            }
+            ViewData["MSG_E"] = "Usuario ou senha não encontrado!";
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Painel()
+        {
+            Cliente cliente = _loginCliente.GetCliente();
+
+            if(cliente != null)
+            {
+                return new ContentResult(){ Content = "Usuadio" + cliente.Nome + "Logado"};
+            }
+            return new ContentResult(){ Content = "Acesso negado!" };
         }
 
         [HttpGet]

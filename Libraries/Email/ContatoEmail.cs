@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using LojaVirtual.Models;
 
-namespace LojaVirtual.Libraries
+namespace LojaVirtual.Libraries.Email
 {
     public class ContatoEmail
     {
