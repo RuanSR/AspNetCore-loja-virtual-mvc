@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using LojaVirtual.Repositories.Interfaces;
 using LojaVirtual.Libraries.Email;
 using LojaVirtual.Libraries.Login;
+using LojaVirtual.Libraries.Filtro;
 
 namespace LojaVirtual.Controllers
 {
@@ -115,15 +116,10 @@ namespace LojaVirtual.Controllers
         }
 
         [HttpGet]
+        [ClienteAutorizacaoAttribute]
         public IActionResult Painel()
         {
-            Cliente cliente = _loginCliente.GetCliente();
-
-            if(cliente != null)
-            {
-                return new ContentResult(){ Content = "Usuadio" + cliente.Nome + "Logado"};
-            }
-            return new ContentResult(){ Content = "Acesso negado!" };
+            return new ContentResult() { Content = "Painel"};
         }
 
         [HttpGet]
