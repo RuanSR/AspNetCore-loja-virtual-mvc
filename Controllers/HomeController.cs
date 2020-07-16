@@ -16,12 +16,15 @@ namespace LojaVirtual.Controllers
         private IClienteRepository _repositoryCliente;
         private INewsletterRepository _repositoryNewsletter;
         private LoginCliente _loginCliente;
-        public HomeController(IClienteRepository repositoryCliente, 
-        INewsletterRepository repositoryNewsletter, LoginCliente loginCliente)
+        private GerenciarEmail _gerenciarEmail;
+
+        public HomeController(IClienteRepository repositoryCliente, INewsletterRepository repositoryNewsletter, LoginCliente loginCliente, GerenciarEmail gerenciarEmail)
         {
             _repositoryCliente = repositoryCliente;
             _repositoryNewsletter = repositoryNewsletter;
             _loginCliente = loginCliente;
+            _gerenciarEmail = gerenciarEmail;
+
         }
 
         [HttpGet]
@@ -66,7 +69,7 @@ namespace LojaVirtual.Controllers
 
                 if (isValid)
                 {
-                    ContatoEmail.EnviarContatoPorEmail(contato);
+                    _gerenciarEmail.EnviarContatoPorEmail(contato);
 
                     ViewData["MSG_S"] = "Mensagem de contato enviado com sucesso!";
                 }
@@ -84,7 +87,7 @@ namespace LojaVirtual.Controllers
 
                 
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 ViewData["MSG_E"] = "Opps! Tivemos um erro, tente novamente mais tarde!";
 
@@ -94,6 +97,7 @@ namespace LojaVirtual.Controllers
 
             return View("Contato");
         }
+
 
         [HttpGet]
         public IActionResult Login()
@@ -109,17 +113,21 @@ namespace LojaVirtual.Controllers
             if(clienteDB != null)
             {
                 _loginCliente.Login(clienteDB);
+
                 return new RedirectResult(Url.Action(nameof(Painel)));
             }
-            ViewData["MSG_E"] = "Usuario ou senha não encontrado!";
-            return View();
+            else
+            {
+                ViewData["MSG_E"] = "Usuário não encontrado, verifique o e-mail e senha digitado!";
+                return View();
+            }
         }
 
         [HttpGet]
-        [ClienteAutorizacaoAttribute]
+        [ClienteAutorizacao]
         public IActionResult Painel()
         {
-            return new ContentResult() { Content = "Painel"};
+            return new ContentResult() { Content = "Este é o Painel do Cliente!" };
         }
 
         [HttpGet]

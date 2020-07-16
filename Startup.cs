@@ -1,4 +1,7 @@
-﻿using LojaVirtual.Database;
+﻿using System.Net;
+using System.Net.Mail;
+using LojaVirtual.Database;
+using LojaVirtual.Libraries.Email;
 using LojaVirtual.Libraries.Login;
 using LojaVirtual.Libraries.Session;
 using LojaVirtual.Repositories;
@@ -25,7 +28,7 @@ namespace LojaVirtual
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            /*
+/*
              * Padrão Repository
              */
             services.AddHttpContextAccessor();
@@ -34,6 +37,24 @@ namespace LojaVirtual
             services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
             services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 
+            /*
+             * SMTP
+             */
+            services.AddScoped<SmtpClient>(options=> {
+                SmtpClient smtp = new SmtpClient()
+                {
+                    Host = Configuration.GetValue<string>("Email:ServerSMTP"),
+                    Port = Configuration.GetValue<int>("Email:ServerPort"),
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(Configuration.GetValue<string>("Email:Username"), Configuration.GetValue<string>("Email:Password")),
+                    EnableSsl = true
+                };
+
+                return smtp;
+            });
+            services.AddScoped<GerenciarEmail>();
+            
+
             services.Configure<CookiePolicyOptions>(options =>
             {
                 
@@ -41,13 +62,18 @@ namespace LojaVirtual
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            //Session Configure
-            services.AddMemoryCache();
-            services.AddSession();
+            /*
+             * Session - Configuração
+             */
+            services.AddMemoryCache(); //Guardar os dados na memória
+            services.AddSession(options=> {
+                
+            });
 
             services.AddScoped<Session>();
             services.AddScoped<LoginCliente>();
             services.AddScoped<LoginColaborador>();
+
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddDbContext<LojaContext>(options => {

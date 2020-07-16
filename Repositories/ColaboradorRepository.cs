@@ -3,21 +3,20 @@ using System.Linq;
 using LojaVirtual.Database;
 using LojaVirtual.Models;
 using LojaVirtual.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using X.PagedList;
 
 namespace LojaVirtual.Repositories
 {
     public class ColaboradorRepository : IColaboradorRepository
     {
+        private IConfiguration _conf;
         private LojaContext _banco;
-
-        public ColaboradorRepository(LojaContext banco)
+        public ColaboradorRepository(LojaContext banco, IConfiguration configuration)
         {
             _banco = banco;
-        }
-        public void Atualizar(Colaborador colaborador)
-        {
-            _banco.Update(colaborador);
-            _banco.SaveChanges();
+            _conf = configuration;
         }
 
         public void Cadastrar(Colaborador colaborador)
@@ -26,10 +25,27 @@ namespace LojaVirtual.Repositories
             _banco.SaveChanges();
         }
 
-        public void Excluir(int id)
+        public void Atualizar(Colaborador colaborador)
         {
-            Colaborador colaborador = ObterColaborador(id);
-            _banco.Remove(colaborador);
+            _banco.Update(colaborador);
+            _banco.Entry(colaborador).Property(a => a.Senha).IsModified = false;
+            _banco.SaveChanges();
+        }
+
+        public void AtualizarSenha(Colaborador colaborador)
+        {
+            _banco.Update(colaborador);
+            _banco.Entry(colaborador).Property(a => a.Nome).IsModified = false;
+            _banco.Entry(colaborador).Property(a => a.Email).IsModified = false;
+            _banco.Entry(colaborador).Property(a => a.Tipo).IsModified = false;
+
+            _banco.SaveChanges();
+        }
+
+        public void Excluir(int Id)
+        {
+            Colaborador cliente = ObterColaborador(Id);
+            _banco.Remove(cliente);
             _banco.SaveChanges();
         }
 
@@ -39,14 +55,22 @@ namespace LojaVirtual.Repositories
             return colaborador;
         }
 
-        public Colaborador ObterColaborador(int id)
+        public Colaborador ObterColaborador(int Id)
         {
-            return _banco.Colaboradores.Find(id);
+            return _banco.Colaboradores.Find(Id);
         }
 
-        public IEnumerable<Colaborador> ObterColaboradores()
+        public IPagedList<Colaborador> ObterTodosColaboradores(int? pagina)
         {
-            return _banco.Colaboradores.ToList();
+            int RegistroPorPagina = _conf.GetValue<int>("RegistroPorPagina");
+            
+            int NumeroPagina = pagina ?? 1;
+            return _banco.Colaboradores.Where(a => a.Tipo != "G").ToPagedList<Colaborador>(NumeroPagina, RegistroPorPagina);
+        }
+
+        public List<Colaborador> ObterColaboradorPorEmail(string email)
+        {
+            return _banco.Colaboradores.Where(a => a.Email == email).AsNoTracking().ToList();
         }
     }
 }
